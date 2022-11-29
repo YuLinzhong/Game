@@ -81,4 +81,4 @@ int main()
 		Sleep(10);
 	}
 	system("pause");
-}
+}//ok
