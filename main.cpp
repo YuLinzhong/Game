@@ -164,7 +164,7 @@ void bgroll()
 			{
 				obstacles[i].exist = 0;
 			}
-			if (obs_count>=2)//解决障碍物刷新过快的问题
+			if (obs_count>=2)//解决障碍物刷新过快的问题.
 			{
 				obs_count = 0;
 				obstacles[i].imgIndex = (obstacles[i].imgIndex + 1) % obstacleImgs[obstacles[i].type].size();
