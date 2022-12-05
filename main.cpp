@@ -20,6 +20,8 @@ int personindex;//人物帧序号
 int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
 int jumpoff;//跳跃偏移量
+
+int update;//表示是否需要马上刷新画面
 // 游戏初始化
 void init() 
 {
@@ -45,7 +47,7 @@ void init()
 
 	jumpstate = 0;
 	jumpheightmax=355 - imgperson[0].getheight()-120;
-	jumpoff = (int)(jumpheightmax - persony) * 0.06 + 2;
+	update = 1;
 }
 
 // 游戏背景滚动（改变背景x坐标）
@@ -109,6 +111,7 @@ void keyEvent()
 	//注意，直接用scanf等会造成阻塞程序运行
 	if (_kbhit())//如果有按键按下
 	{
+		update = 1;//立即刷新画面
 		ch=_getch(); //读取字符而不需要按回车
 		if (ch == ' ')//跳跃
 		{
@@ -125,9 +128,14 @@ int main()
 	{
 		keyEvent();
 		timer += getDelay();
-		if (timer > 30)
+		if (timer > 15)
 		{
 			timer = 0;
+			update = 1;
+		}
+		if (update)
+		{
+			update = 0;
 			BeginBatchDraw();//双缓冲
 			updatebg();//渲染游戏背景
 			jumpaction();//跳跃
