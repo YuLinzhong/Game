@@ -21,7 +21,13 @@ int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
 int jumpoff;//跳跃偏移量
 
+IMAGE imgTortoise;//障碍物：乌龟
+int tortoisex;
+int tortoisey;
+int tortoise_exist; //是否存在小乌龟
+
 int update;//表示是否需要马上刷新画面
+
 // 游戏初始化
 void init() 
 {
@@ -40,14 +46,19 @@ void init()
 		sprintf_s(name, "res/hero%d.png", i + 1);//存人物filename
 		loadimage(&imgperson[i], name);
 	}
+	//加载小乌龟素材
+	loadimage(&imgTortoise,"res/t1.png");
 	//设置人物入场时的初始位置
 	personx = WINDOW_WIDTH * 0.5-imgperson[0].getwidth()*0.5;
 	persony=355-imgperson[0].getheight();
 	personindex = 0;
-
+	//设置跳跃参数
 	jumpstate = 0;
 	jumpheightmax=355 - imgperson[0].getheight()-120;
+	//设置刷新参数
 	update = 1;
+	//设置小乌龟参数
+	tortoisey = 355 - imgTortoise.getheight();
 }
 
 // 游戏背景滚动（改变背景x坐标）
@@ -59,6 +70,31 @@ void bgroll()
 		if (bgx[i] < -WINDOW_WIDTH)	
 			bgx[i] = 0;
 	}
+
+	//创建小乌龟
+	static int framecount = 0;
+	static int tortoise_fre;//乌龟产生频率
+	tortoise_fre = 200 + rand() % 300;
+	framecount++;
+	if (framecount > tortoise_fre)
+	{
+		framecount = 0;
+		if (!tortoise_exist)
+		{
+			tortoise_exist = 1;
+			tortoisex = WINDOW_WIDTH;
+
+			tortoise_fre = 200 + rand() % 300;
+		}
+	}
+	if (tortoise_exist)
+	{
+		tortoisex -= bgspeed[2];
+		if (tortoisex < -imgTortoise.getwidth())
+		{
+			tortoise_exist = 0;
+		}
+	}	
 }
 
 //实现跳跃
@@ -96,6 +132,15 @@ void updateperson(int personx,int persony)
 	personindex++;
 	personindex %= 12;
 	putimagePNG2(personx, persony, &imgperson[personindex]);
+}
+
+void update_enemy()
+{
+	//渲染小乌龟
+	if (tortoise_exist)//有小乌龟才渲染
+	{
+		putimagePNG2(tortoisex, tortoisey,WINDOW_WIDTH,&imgTortoise);
+	}
 }
 
 //跳跃状态的变更
@@ -139,7 +184,8 @@ int main()
 			BeginBatchDraw();//双缓冲
 			updatebg();//渲染游戏背景
 			jumpaction();//跳跃
-			updateperson(personx, persony);
+			updateperson(personx, persony);//渲染角色
+			update_enemy();//渲染障碍物
 			EndBatchDraw();
 			bgroll();//背景滚动
 		}
