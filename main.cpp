@@ -96,8 +96,6 @@ void updateperson(int personx,int persony)
 	putimagePNG2(personx, persony, &imgperson[personindex]);
 }
 
-
-
 //ÌøÔ¾×´Ì¬µÄ±ä¸ü
 void jump()
 {
@@ -117,23 +115,26 @@ void keyEvent()
 			jump();
 		}
 	}
-
 }
 
 int main() 
 {
 	init();//³õÊ¼»¯
+	int timer = 0;
 	while (1)
 	{
 		keyEvent();
-
-		BeginBatchDraw();//Ë«»º³å
-		updatebg();//äÖÈ¾ÓÎÏ·±³¾°
-		jumpaction();//ÌøÔ¾
-		updateperson(personx, persony);
-		EndBatchDraw();
-		bgroll();//±³¾°¹ö¶¯
-		Sleep(10);
+		timer += getDelay();
+		if (timer > 30)
+		{
+			timer = 0;
+			BeginBatchDraw();//Ë«»º³å
+			updatebg();//äÖÈ¾ÓÎÏ·±³¾°
+			jumpaction();//ÌøÔ¾
+			updateperson(personx, persony);
+			EndBatchDraw();
+			bgroll();//±³¾°¹ö¶¯
+		}
 	}
 	system("pause");
 }
