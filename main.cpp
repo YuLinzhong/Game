@@ -45,7 +45,7 @@ void init()
 
 	jumpstate = 0;
 	jumpheightmax=355 - imgperson[0].getheight()-120;
-	jumpoff = -6;
+	jumpoff = (int)(jumpheightmax - persony) * 0.06 + 2;
 }
 
 // 游戏背景滚动（改变背景x坐标）
@@ -66,13 +66,13 @@ void jumpaction()
 	{
 		if (persony < jumpheightmax)//游戏角色接触天空
 		{
-			jumpoff = +6;
+			jumpstate = -1;
 		}
+		jumpoff = jumpstate * ( (int) ( (jumpheightmax - persony) * 0.04) - 4);
 		persony += jumpoff;
 		if (persony > 355 - imgperson[0].getheight())//游戏角色接触地面
 		{
 			jumpstate = 0;//结束跳跃
-			jumpoff = -6; //恢复偏移量
 		}
 		//当跳跃的时候，不更新index帧序列，因为updateperson函数一直++，所以这里用--抵消
 		personindex--;
@@ -119,6 +119,7 @@ void keyEvent()
 	}
 
 }
+
 int main() 
 {
 	init();//初始化
