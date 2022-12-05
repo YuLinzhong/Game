@@ -2,11 +2,15 @@
 #include <graphics.h>//图形库
 #include "tools.h"
 #include <conio.h>
+#include <vector>
+
+using namespace std; //命名空间
 
 #define WINDOW_WIDTH 1012//窗口长度
 #define WINDOW_HEIGHT 396//窗口宽度
 #define PERSON_NUM 12//人物帧数量
 #define BG_NUM 3//背景帧数量
+#define OBSTACLE_COUNT 10//障碍物种类
 
 IMAGE imgbgs[BG_NUM];//后中前背景全局变量
 int bgx[BG_NUM] = { 0 };//背景图片x坐标
@@ -21,10 +25,25 @@ int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
 int jumpoff;//跳跃偏移量
 
-IMAGE imgTortoise;//障碍物：乌龟
-int tortoisex;
-int tortoisey;
-int tortoise_exist; //是否存在小乌龟
+typedef enum {//障碍物枚举类型
+	TORTOISE,//乌龟 0
+	LION,//狮子 1
+	OBSTACLE_TYPE_CONUT //2
+}obstacle_type;
+
+vector<vector<IMAGE>> obstacleImgs; //存放障碍物的图片
+
+typedef struct obstacle
+{
+	obstacle_type type; //障碍物的类型
+	int imgIndex;//当前显示图片的帧序号
+	int x, y;//障碍物坐标
+	int speed;
+	int power; //伤害力
+	bool exist;
+}obstacle_t;
+
+obstacle_t obstacles[OBSTACLE_COUNT];
 
 int update;//表示是否需要马上刷新画面
 
@@ -46,8 +65,6 @@ void init()
 		sprintf_s(name, "res/hero%d.png", i + 1);//存人物filename
 		loadimage(&imgperson[i], name);
 	}
-	//加载小乌龟素材
-	loadimage(&imgTortoise,"res/t1.png");
 	//设置人物入场时的初始位置
 	personx = WINDOW_WIDTH * 0.5-imgperson[0].getwidth()*0.5;
 	persony=355-imgperson[0].getheight();
@@ -57,10 +74,64 @@ void init()
 	jumpheightmax=355 - imgperson[0].getheight()-120;
 	//设置刷新参数
 	update = 1;
-	//设置小乌龟参数
-	tortoisey = 355 - imgTortoise.getheight();
+	//加载小乌龟素材
+	IMAGE imgTort;
+	vector<IMAGE>imgTortArray;
+	for (int i = 1; i <= 7; i++)
+	{
+		sprintf_s(name, "res/t%d.png", i);//存乌龟filename
+		loadimage(&imgTort, name);
+		imgTortArray.push_back(imgTort);
+	}
+	obstacleImgs.push_back(imgTortArray);
+	//加载狮子素材
+	IMAGE imgLion;
+	vector<IMAGE> imgLionArray;
+	for (int i = 1; i <= 6; i++)
+	{
+		sprintf_s(name, "res/p%d.png", i);//存狮子filename
+		loadimage(&imgLion, name);
+		imgLionArray.push_back(imgLion);
+	}
+	obstacleImgs.push_back(imgLionArray);
+
+	//初始化障碍物池
+	for (int i = 0; i < OBSTACLE_COUNT; i++)
+	{
+		obstacles[i].exist = 0;
+	}
 }
 
+void createObstacle()
+{
+	int i;
+	for (i = 0; i < OBSTACLE_COUNT; i++)
+	{
+		if (obstacles[i].exist == 0)
+		{
+			break;
+		}
+	}
+	if (i >= OBSTACLE_COUNT)
+	{
+		return;
+	}
+	obstacles[i].exist = 1;
+	obstacles[i].imgIndex = 0;
+	obstacles[i].type = (obstacle_type)(rand() % OBSTACLE_TYPE_CONUT);
+	obstacles[i].x = WINDOW_WIDTH;
+	obstacles[i].y = 355 - obstacleImgs[obstacles[i].type][0].getheight();
+	if (obstacles[i].type == TORTOISE)
+	{
+		obstacles[i].speed = 0;
+		obstacles[i].power = 5;
+	}
+	else if (obstacles[i].type == LION)
+	{
+		obstacles[i].speed = 4;
+		obstacles[i].power = 20;
+	}
+}
 // 游戏背景滚动（改变背景x坐标）
 void bgroll()
 {
@@ -71,30 +142,29 @@ void bgroll()
 			bgx[i] = 0;
 	}
 
-	//创建小乌龟
+	//创建障碍物
 	static int framecount = 0;
-	static int tortoise_fre;//乌龟产生频率
-	tortoise_fre = 200 + rand() % 300;
+	static int enemy_fre;//障碍物产生频率
+	enemy_fre = 100+rand() % 100;
 	framecount++;
-	if (framecount > tortoise_fre)
+	if (framecount > enemy_fre)
 	{
 		framecount = 0;
-		if (!tortoise_exist)
+		enemy_fre = 100 + rand() % 100;
+		createObstacle();
+	}	
+	for (int i =0; i< OBSTACLE_COUNT;i++)
+	{
+		if (obstacles[i].exist)
 		{
-			tortoise_exist = 1;
-			tortoisex = WINDOW_WIDTH;
-
-			tortoise_fre = 200 + rand() % 300;
+			obstacles[i].x -= (obstacles[i].speed + bgspeed[2]);
+			if (obstacles[i].x < obstacleImgs[obstacles[i].type][0].getwidth() * (-2))
+			{
+				obstacles[i].exist = 0;
+			}
+			obstacles[i].imgIndex = (obstacles[i].imgIndex + 1) % obstacleImgs[obstacles[i].type].size();
 		}
 	}
-	if (tortoise_exist)
-	{
-		tortoisex -= bgspeed[2];
-		if (tortoisex < -imgTortoise.getwidth())
-		{
-			tortoise_exist = 0;
-		}
-	}	
 }
 
 //实现跳跃
@@ -136,10 +206,14 @@ void updateperson(int personx,int persony)
 
 void update_enemy()
 {
-	//渲染小乌龟
-	if (tortoise_exist)//有小乌龟才渲染
+	//渲染障碍物
+	for (int i = 0; i < OBSTACLE_COUNT; i++)
 	{
-		putimagePNG2(tortoisex, tortoisey,WINDOW_WIDTH,&imgTortoise);
+		if (obstacles[i].exist)
+		{
+			putimagePNG2(obstacles[i].x, obstacles[i].y, WINDOW_WIDTH,
+				&obstacleImgs[obstacles[i].type][obstacles[i].imgIndex]);
+		}
 	}
 }
 
