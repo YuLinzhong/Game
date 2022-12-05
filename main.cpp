@@ -142,11 +142,13 @@ void bgroll()
 			bgx[i] = 0;
 	}
 
-	//创建障碍物
-	static int framecount = 0;
+	//障碍物创建与滚动
+	static int framecount = 0;//记录当前帧数
 	static int enemy_fre;//障碍物产生频率
+	static int obs_count = 0;//记录障碍物帧数
 	enemy_fre = 100+rand() % 100;
 	framecount++;
+	obs_count++;
 	if (framecount > enemy_fre)
 	{
 		framecount = 0;
@@ -162,7 +164,11 @@ void bgroll()
 			{
 				obstacles[i].exist = 0;
 			}
-			obstacles[i].imgIndex = (obstacles[i].imgIndex + 1) % obstacleImgs[obstacles[i].type].size();
+			if (obs_count>=2)//解决障碍物刷新过快的问题
+			{
+				obs_count = 0;
+				obstacles[i].imgIndex = (obstacles[i].imgIndex + 1) % obstacleImgs[obstacles[i].type].size();
+			}
 		}
 	}
 }
