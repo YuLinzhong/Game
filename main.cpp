@@ -25,6 +25,7 @@ int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
 int jumpoff;//跳跃偏移量
 
+int downstate;//表示人物在下蹲动作
 typedef enum {//障碍物枚举类型
 	TORTOISE,//乌龟 0
 	LION,//狮子 1
@@ -41,11 +42,15 @@ typedef struct obstacle
 	int speed;
 	int power; //伤害力
 	bool exist;
+	int obs_count;//控制其刷新帧率
 }obstacle_t;
 
 obstacle_t obstacles[OBSTACLE_COUNT];
 
 int update;//表示是否需要马上刷新画面
+
+IMAGE imgPersonDown[2];
+
 
 // 游戏初始化
 void init() 
@@ -99,11 +104,21 @@ void init()
 	for (int i = 0; i < OBSTACLE_COUNT; i++)
 	{
 		obstacles[i].exist = 0;
+		obstacles[i].obs_count = 0;
 	}
+
+	//加载下蹲素材
+	for (int i = 1; i <= 2; i++)
+	{
+		sprintf_s(name, "res/d%d.png", i);//存下蹲图片的filename
+		loadimage(&imgPersonDown[i-1], name);
+	}
+	downstate = 0;
 }
 
 void createObstacle()
 {
+	//创建障碍物
 	int i;
 	for (i = 0; i < OBSTACLE_COUNT; i++)
 	{
@@ -145,10 +160,8 @@ void bgroll()
 	//障碍物创建与滚动
 	static int framecount = 0;//记录当前帧数
 	static int enemy_fre;//障碍物产生频率
-	static int obs_count = 0;//记录障碍物帧数
 	enemy_fre = 100+rand() % 100;
 	framecount++;
-	obs_count++;
 	if (framecount > enemy_fre)
 	{
 		framecount = 0;
@@ -160,20 +173,22 @@ void bgroll()
 		if (obstacles[i].exist)
 		{
 			obstacles[i].x -= (obstacles[i].speed + bgspeed[2]);
-			if (obstacles[i].x < obstacleImgs[obstacles[i].type][0].getwidth() * (-2))
+			if (obstacles[i].x < obstacleImgs[obstacles[i].type][0].getwidth() * (-2))//当障碍物跑出屏幕时
 			{
-				obstacles[i].exist = 0;
+				obstacles[i].exist = 0;//改变障碍物状态为不存在
 			}
-			if (obs_count>=2)//解决障碍物刷新过快的问题.
+			obstacles[i].obs_count++;
+
+			if (obstacles[i].obs_count>=2)//解决障碍物刷新过快的问题
 			{
-				obs_count = 0;
+				obstacles[i].obs_count = 0;
 				obstacles[i].imgIndex = (obstacles[i].imgIndex + 1) % obstacleImgs[obstacles[i].type].size();
 			}
 		}
 	}
 }
 
-//实现跳跃
+//实现跳跃，更改人物y值
 void jumpaction()
 {
 	if (jumpstate)
@@ -182,7 +197,7 @@ void jumpaction()
 		{
 			jumpstate = -1;
 		}
-		jumpoff = jumpstate * ( (int) ( (jumpheightmax - persony) * 0.04) - 4);
+		jumpoff = jumpstate * ( (int) ( (jumpheightmax - persony) * 0.04) - 4);//偏移量
 		persony += jumpoff;
 		if (persony > 355 - imgperson[0].getheight())//游戏角色接触地面
 		{
@@ -202,12 +217,32 @@ void updatebg()
 	putimagePNG2(bgx[2], 330, &imgbgs[2]);
 }
 
-//渲染人物奔跑动画
+//渲染人物
 void updateperson(int personx,int persony)
 {
-	personindex++;
-	personindex %= 12;
-	putimagePNG2(personx, persony, &imgperson[personindex]);
+	if (downstate == 0)//不下蹲的时候
+	{
+		personindex++;
+		personindex %= 12;
+		putimagePNG2(personx, persony, &imgperson[personindex]);
+	}
+	else
+	{
+		static int downcount = 0;
+		downcount++;
+		if (downcount >= 10)//downcount主要用于控制帧率
+		{
+			downcount = 0;
+			personindex++;//这个时候才更新下蹲
+			if (personindex >= 2)//下蹲动作结束
+			{
+				personindex = 0;
+				downstate = 0;
+			}
+		}
+		int y = 355 - imgPersonDown[personindex].getheight();//因为下蹲时人物高度发生改变，所以这里改变一下y值
+		putimagePNG2(personx, y,& imgPersonDown[personindex]);
+	}
 }
 
 void update_enemy()
@@ -229,6 +264,12 @@ void jump()
 	jumpstate = 1;
 }
 
+//打开下蹲开关
+void down()
+{
+	downstate = 1;
+	personindex = 0;//下蹲时先初始化index
+}
 //处理用户输入
 void keyEvent()
 {
@@ -242,6 +283,10 @@ void keyEvent()
 		{
 			jump();
 		}
+		else if (ch == 's')
+		{
+			down();
+		}
 	}
 }
 
@@ -253,7 +298,7 @@ int main()
 	{
 		keyEvent();
 		timer += getDelay();
-		if (timer > 15)
+		if (timer > 15)//控制刷新
 		{
 			timer = 0;
 			update = 1;
