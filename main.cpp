@@ -135,6 +135,8 @@ void init()
 
 	//初始化血量
 	personblood = 100;
+	//预加载碰撞音效
+	preLoadSound("res/hit.mp3");
 }
 
 void createObstacle()
@@ -195,7 +197,7 @@ void checkHit()
 			else//下蹲状态
 			{
 				a1x = personx + off;
-				a1y = 355 - imgperson[personindex].getheight();
+				a1y = 355 - imgperson[personindex].getheight()+100;
 				a2x = personx + imgPersonDown[personindex].getwidth() - off;
 				a2y = persony + imgPersonDown[personindex].getheight();
 				
@@ -211,6 +213,7 @@ void checkHit()
 			{
 				personblood -= obstacles[i].power;//减血
 				printf("血量剩余 %d\n", personblood);
+				
 				playSound("res/hit.mp3");
 				obstacles[i].hited = 1;
 			}
