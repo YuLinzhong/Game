@@ -29,7 +29,11 @@ int downstate;//表示人物在下蹲动作
 typedef enum {//障碍物枚举类型
 	TORTOISE,//乌龟 0
 	LION,//狮子 1
-	OBSTACLE_TYPE_CONUT //2
+	HOOK1,//钩子~
+	HOOK2,
+	HOOK3,
+	HOOK4,
+	OBSTACLE_TYPE_CONUT //6
 }obstacle_type;
 
 vector<vector<IMAGE>> obstacleImgs; //存放障碍物的图片
@@ -114,6 +118,17 @@ void init()
 		loadimage(&imgPersonDown[i-1], name);
 	}
 	downstate = 0;
+
+	//加载障碍物——四个钩子
+	IMAGE imgH;
+	for (int i = 0; i < 4; i++)
+	{
+		vector<IMAGE> imgHookArray;
+		sprintf_s(name, "res/h%d.png", i);//存钩子图片的filename
+		loadimage(&imgH, name, 63, 260, true);
+		imgHookArray.push_back(imgH);
+		obstacleImgs.push_back(imgHookArray);//用二维vector存图片
+	}
 }
 
 void createObstacle()
@@ -145,6 +160,12 @@ void createObstacle()
 	{
 		obstacles[i].speed = 4;
 		obstacles[i].power = 20;
+	}
+	else if (obstacles[i].type >= HOOK1&& obstacles[i].type<=HOOK4)
+	{
+		obstacles[i].speed = 0;
+		obstacles[i].power = 20;
+		obstacles[i].y = 0;
 	}
 }
 // 游戏背景滚动（改变背景x坐标）
@@ -228,9 +249,10 @@ void updateperson(int personx,int persony)
 	}
 	else
 	{
-		static int downcount = 0;
+		static int downcount = 0;//downcount主要用于控制帧率
+		int delays[2] = { 5,38 };//delays分别记录两帧下蹲动作的持续时间
 		downcount++;
-		if (downcount >= 10)//downcount主要用于控制帧率
+		if (downcount >= delays[personindex])
 		{
 			downcount = 0;
 			personindex++;//这个时候才更新下蹲
