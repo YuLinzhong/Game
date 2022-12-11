@@ -137,6 +137,8 @@ void init()
 	personblood = 100;
 	//预加载碰撞音效
 	preLoadSound("res/hit.mp3");
+
+	mciSendString("play res/bg.mp3", 0, 0, 0);//播放背景音乐
 }
 
 void createObstacle()
@@ -377,9 +379,29 @@ void updatebloodbar()
 	drawBloodBar(10, 10, 200, 10, 2, BLUE, DARKGRAY, RED, personblood / 100.0);//血条绘制
 }
 
+//检查游戏结束
+void checkover()
+{
+	if (personblood <= 0)
+	{
+		loadimage(0, "res/over.png");
+		FlushBatchDraw();//刷新缓冲
+		mciSendString("stop res/bg.mp3", 0, 0, 0);//关闭背景音乐
+		system("pause");//暂停
+		//按任意键继续游戏
+		personblood = 100;
+		mciSendString("play res/bg.mp3", 0, 0, 0);
+	}
+}
+
 int main() 
 {
 	init();//初始化
+
+	//显示初始画面
+	loadimage(0, "res/over.png");
+	system("pause");//暂停
+
 	int timer = 0;
 	while (1)
 	{
@@ -400,6 +422,8 @@ int main()
 			update_enemy();//渲染障碍物
 			updatebloodbar();//渲染血条
 			EndBatchDraw();
+
+			checkover();//检查游戏是否结束
 			bgroll();//背景滚动
 		}
 	}
