@@ -111,7 +111,7 @@ void putimagePNG2(int x, int y, int winWidth, IMAGE* picture) {
     putimagePNG(x, y, picture);
 }
 
-//设A[x01,y01,x02,y02]  B[x11,y11,x12,y12].
+//设A[x01,y01,x02,y02]  B[x11,y11,x12,y12].AB分别表示两个图片，01 11表示左上角 02 12表示右下角
 bool rectIntersect(int x01, int y01, int x02, int y02,
     int x11, int y11, int x12, int y12)
 {

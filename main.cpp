@@ -20,6 +20,7 @@ IMAGE imgperson[PERSON_NUM];//人物奔跑的图片全局变量
 int personx;//人物坐标
 int persony;//人物坐标
 int personindex;//人物帧序号
+int personblood;//人物血量
 
 int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
@@ -47,6 +48,7 @@ typedef struct obstacle
 	int power; //伤害力
 	bool exist;
 	int obs_count;//控制其刷新帧率
+	bool hited;//表示是否已经发生碰撞
 }obstacle_t;
 
 obstacle_t obstacles[OBSTACLE_COUNT];
@@ -60,7 +62,8 @@ IMAGE imgPersonDown[2];
 void init() 
 {
 	//创建窗口
-	initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
+	initgraph(WINDOW_WIDTH, WINDOW_HEIGHT,EW_SHOWCONSOLE);
+	//initgraph(WINDOW_WIDTH, WINDOW_HEIGHT);
 	//加载背景图片
 	char name[64] = {};
 	for (int i = 0; i < BG_NUM; i++)
@@ -129,6 +132,9 @@ void init()
 		imgHookArray.push_back(imgH);
 		obstacleImgs.push_back(imgHookArray);//用二维vector存图片
 	}
+
+	//初始化血量
+	personblood = 100;
 }
 
 void createObstacle()
@@ -151,6 +157,7 @@ void createObstacle()
 	obstacles[i].type = (obstacle_type)(rand() % OBSTACLE_TYPE_CONUT);//这一个变量决定障碍物的类型
 	obstacles[i].x = WINDOW_WIDTH;
 	obstacles[i].y = 355 - obstacleImgs[obstacles[i].type][0].getheight();
+	obstacles[i].hited = false;
 	if (obstacles[i].type == TORTOISE)
 	{
 		obstacles[i].speed = 0;
@@ -168,6 +175,50 @@ void createObstacle()
 		obstacles[i].y = 0;
 	}
 }
+
+void checkHit()
+{
+	for (int i = 0; i < OBSTACLE_COUNT; i++)//分别检测每个障碍物与玩家是否碰撞即可
+	{
+		if (obstacles[i].exist&&obstacles[i].hited==false)
+		{
+			//分别计算各图片的左上角坐标和右上角坐标
+			int a1x, a1y, a2x, a2y;
+			int off = 30;//碰撞误差，小于30px时不算碰撞
+			if (!downstate)//如果不是下蹲状态
+			{
+				a1x = personx + off;
+				a1y = persony + off;
+				a2x = personx + imgperson[personindex].getwidth() - off;
+				a2y = persony + imgperson[personindex].getheight();
+			}
+			else//下蹲状态
+			{
+				a1x = personx + off;
+				a1y = 355 - imgperson[personindex].getheight();
+				a2x = personx + imgPersonDown[personindex].getwidth() - off;
+				a2y = persony + imgPersonDown[personindex].getheight();
+				
+			}
+			IMAGE img = obstacleImgs[obstacles[i].type][obstacles[i].imgIndex];
+			int b1x = obstacles[i].x + off;
+			int b1y = obstacles[i].y + off;
+			int b2x = obstacles[i].x + img.getwidth() - off;
+			int b2y = obstacles[i].y+ img.getheight()- 10;
+
+			//判断是否碰撞
+			if (rectIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y))
+			{
+				personblood -= obstacles[i].power;//减血
+				printf("血量剩余 %d\n", personblood);
+				playSound("res/hit.mp3");
+				obstacles[i].hited = 1;
+			}
+		}
+	}
+}
+
+
 // 游戏背景滚动（改变背景x坐标）
 void bgroll()
 {
@@ -207,6 +258,9 @@ void bgroll()
 			}
 		}
 	}
+
+	//碰撞检测
+	checkHit();
 }
 
 //实现跳跃，更改人物y值
@@ -303,11 +357,11 @@ void keyEvent()
 	{
 		update = 1;//立即刷新画面
 		ch=_getch(); //读取字符而不需要按回车
-		if (ch == ' ')//跳跃
+		if (ch == 'w'||ch=='W')//跳跃
 		{
 			jump();
 		}
-		else if (ch == 's')
+		else if (ch == 's'||ch=='S')
 		{
 			down();
 		}
