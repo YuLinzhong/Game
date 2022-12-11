@@ -371,6 +371,12 @@ void keyEvent()
 	}
 }
 
+//渲染血条
+void updatebloodbar()
+{
+	drawBloodBar(10, 10, 200, 10, 2, BLUE, DARKGRAY, RED, personblood / 100.0);//血条绘制
+}
+
 int main() 
 {
 	init();//初始化
@@ -392,6 +398,7 @@ int main()
 			jumpaction();//跳跃
 			updateperson(personx, persony);//渲染角色
 			update_enemy();//渲染障碍物
+			updatebloodbar();//渲染血条
 			EndBatchDraw();
 			bgroll();//背景滚动
 		}
