@@ -148,7 +148,7 @@ void createObstacle()
 	}
 	obstacles[i].exist = 1;
 	obstacles[i].imgIndex = 0;
-	obstacles[i].type = (obstacle_type)(rand() % OBSTACLE_TYPE_CONUT);
+	obstacles[i].type = (obstacle_type)(rand() % OBSTACLE_TYPE_CONUT);//这一个变量决定障碍物的类型
 	obstacles[i].x = WINDOW_WIDTH;
 	obstacles[i].y = 355 - obstacleImgs[obstacles[i].type][0].getheight();
 	if (obstacles[i].type == TORTOISE)
@@ -284,12 +284,14 @@ void update_enemy()
 void jump()
 {
 	jumpstate = 1;
+	downstate = 0;
 }
 
 //打开下蹲开关
 void down()
 {
 	downstate = 1;
+	jumpstate = 0;
 	personindex = 0;//下蹲时先初始化index
 }
 //处理用户输入
