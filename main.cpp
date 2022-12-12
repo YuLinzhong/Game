@@ -3,6 +3,7 @@
 #include "tools.h"
 #include <conio.h>
 #include <vector>
+#pragma warning(disable :  4996)
 
 using namespace std; //命名空间
 
@@ -32,6 +33,7 @@ int jumpoff;//跳跃偏移量
 int downstate;//表示人物在下蹲动作
 
 IMAGE imgSZ[10];
+
 
 typedef enum {//障碍物枚举类型
 	TORTOISE,//乌龟 0
@@ -64,6 +66,28 @@ int update;//表示是否需要马上刷新画面
 
 IMAGE imgPersonDown[2];
 
+//排名
+void ranks()
+{
+	FILE* f;
+	f = fopen("score.txt", "r+");
+	fscanf_s(f, "%*[^\n]");//跳过第一行文字
+	int i = 0;
+	int sc[100];
+	while (!feof(f))
+	{
+		fscanf_s(f, "%d", &sc[i]);
+		i++;
+	}
+	int rank=1;
+	for (int j = 0; j < i; j++)
+	{
+		if (sc[j] > score) rank++;
+	}
+	printf("您的排名为：%d", rank);
+	fprintf_s(f,"%d\n", score);
+	fclose(f);
+}
 
 // 游戏初始化
 void init() 
@@ -405,6 +429,7 @@ void checkover()
 		loadimage(0, "res/over.png");
 		FlushBatchDraw();//刷新缓冲
 		mciSendString("stop res/bg.mp3", 0, 0, 0);//关闭背景音乐
+		ranks();
 		system("pause");//暂停
 		//按任意键继续游戏
 		personblood = 100;//血加满
@@ -458,6 +483,7 @@ void checkwin()
 		loadimage(0, "res/win.png");//加载胜利画面
 		FlushBatchDraw();
 		mciSendString("stop res/bg.mp3", 0, 0, 0);//停止背景音乐
+		ranks();
 		system("pause");
 
 		//重新初始化血量和得分，播放音乐
@@ -466,6 +492,7 @@ void checkwin()
 		mciSendString("play res/bg.mp3 repeat", 0, 0, 0);
 	}
 }
+
 
 int main() 
 {
