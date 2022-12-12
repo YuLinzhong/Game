@@ -21,6 +21,7 @@ int personx;//人物坐标
 int persony;//人物坐标
 int personindex;//人物帧序号
 int personblood;//人物血量
+int score;//分数
 
 int jumpstate;//表示人物正在跳跃
 int jumpheightmax;//跳跃最高高度
@@ -49,6 +50,7 @@ typedef struct obstacle
 	bool exist;
 	int obs_count;//控制其刷新帧率
 	bool hited;//表示是否已经发生碰撞
+	bool passed;//表示是否已经被通过
 }obstacle_t;
 
 obstacle_t obstacles[OBSTACLE_COUNT];
@@ -138,7 +140,9 @@ void init()
 	//预加载碰撞音效
 	preLoadSound("res/hit.mp3");
 
-	mciSendString("play res/bg.mp3", 0, 0, 0);//播放背景音乐
+	mciSendString("play res/bg.mp3 repeat", 0, 0, 0);//播放背景音乐
+
+	score = 0;
 }
 
 void createObstacle()
@@ -178,6 +182,8 @@ void createObstacle()
 		obstacles[i].power = 20;
 		obstacles[i].y = 0;
 	}
+
+	obstacles[i].passed = false;
 }
 
 void checkHit()
@@ -390,7 +396,23 @@ void checkover()
 		system("pause");//暂停
 		//按任意键继续游戏
 		personblood = 100;
-		mciSendString("play res/bg.mp3", 0, 0, 0);
+		mciSendString("play res/bg.mp3 repeat", 0, 0, 0);
+	}
+}
+
+//检查得分
+void checkscore()
+{
+	for (int i = 0; i < OBSTACLE_COUNT; i++)
+	{
+		if (obstacles[i].exist&&
+			obstacles[i].passed==false&&
+			obstacles[i].x+obstacleImgs[obstacles[i].type][0].getwidth()<personx)
+		{
+			score++;
+			obstacles[i].passed = true;
+			printf("score:%d\n", score);
+		}
 	}
 }
 
@@ -424,6 +446,7 @@ int main()
 			EndBatchDraw();
 
 			checkover();//检查游戏是否结束
+			checkscore();//检查得分
 			bgroll();//背景滚动
 		}
 	}
