@@ -6,6 +6,8 @@
 
 using namespace std; //命名空间
 
+#define WIN_SCORE 100//100分胜利
+
 #define WINDOW_WIDTH 1012//窗口长度
 #define WINDOW_HEIGHT 396//窗口宽度
 #define PERSON_NUM 12//人物帧数量
@@ -445,6 +447,26 @@ void updatescore()
 	}
 }
 
+//检查胜利
+void checkwin()
+{
+	if (score >= WIN_SCORE)
+	{
+		FlushBatchDraw();
+		mciSendString("play res/win.mp3", 0, 0, 0);//播放胜利音乐
+		Sleep(2000);
+		loadimage(0, "res/win.png");//加载胜利画面
+		FlushBatchDraw();
+		mciSendString("stop res/bg.mp3", 0, 0, 0);//停止背景音乐
+		system("pause");
+
+		//重新初始化血量和得分，播放音乐
+		personblood = 100;
+		score = 0;
+		mciSendString("play res/bg.mp3 repeat", 0, 0, 0);
+	}
+}
+
 int main() 
 {
 	init();//初始化
@@ -473,6 +495,7 @@ int main()
 			update_enemy();//渲染障碍物
 			updatebloodbar();//渲染血条
 			updatescore();//渲染得分
+			checkwin();//检查是否胜利
 			EndBatchDraw();
 
 			checkover();//检查游戏是否结束
