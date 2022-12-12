@@ -28,6 +28,9 @@ int jumpheightmax;//跳跃最高高度
 int jumpoff;//跳跃偏移量
 
 int downstate;//表示人物在下蹲动作
+
+IMAGE imgSZ[10];
+
 typedef enum {//障碍物枚举类型
 	TORTOISE,//乌龟 0
 	LION,//狮子 1
@@ -142,7 +145,14 @@ void init()
 
 	mciSendString("play res/bg.mp3 repeat", 0, 0, 0);//播放背景音乐
 
-	score = 0;
+	score = 0;//初始得分置为0
+
+	//加载数字图片
+	for (int i = 0; i < 10; i++)
+	{
+		sprintf_s(name, "res/num/%d.png", i);
+		loadimage(&imgSZ[i], name);
+	}
 }
 
 void createObstacle()
@@ -395,7 +405,8 @@ void checkover()
 		mciSendString("stop res/bg.mp3", 0, 0, 0);//关闭背景音乐
 		system("pause");//暂停
 		//按任意键继续游戏
-		personblood = 100;
+		personblood = 100;//血加满
+		score = 0;//分数清零
 		mciSendString("play res/bg.mp3 repeat", 0, 0, 0);
 	}
 }
@@ -405,14 +416,32 @@ void checkscore()
 {
 	for (int i = 0; i < OBSTACLE_COUNT; i++)
 	{
-		if (obstacles[i].exist&&
-			obstacles[i].passed==false&&
-			obstacles[i].x+obstacleImgs[obstacles[i].type][0].getwidth()<personx)
+		if (obstacles[i].exist&&//判断障碍物存在
+			obstacles[i].passed==false&&//判断是否通过
+			obstacles[i].hited==false&&//判断是否撞击
+			obstacles[i].x+obstacleImgs[obstacles[i].type][0].getwidth()<personx)//判断x坐标位置
 		{
 			score++;
 			obstacles[i].passed = true;
 			printf("score:%d\n", score);
 		}
+	}
+}
+
+//渲染得分
+void updatescore()
+{
+	char str[8];
+	sprintf_s(str, "%d", score);//将数字转化为字符串
+
+	int x = 20;
+	int y = 25;
+
+	for (int i = 0; str[i]; i++)
+	{
+		int sz = str[i] - '0';
+		putimagePNG(x, y, &imgSZ[sz]);
+		x += imgSZ[sz].getwidth()+5;
 	}
 }
 
@@ -443,6 +472,7 @@ int main()
 			updateperson(personx, persony);//渲染角色
 			update_enemy();//渲染障碍物
 			updatebloodbar();//渲染血条
+			updatescore();//渲染得分
 			EndBatchDraw();
 
 			checkover();//检查游戏是否结束
