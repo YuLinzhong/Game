@@ -230,34 +230,34 @@ void checkHit()
 		{
 			//分别计算各图片的左上角坐标和右上角坐标
 			int a1x, a1y, a2x, a2y;
-			int off = 30;//碰撞误差，小于30px时不算碰撞
+			int off = 22;//碰撞误差，小于22px时不算碰撞
 			if (!downstate)//如果不是下蹲状态
 			{
 				a1x = personx + off;
 				a1y = persony + off;
 				a2x = personx + imgperson[personindex].getwidth() - off;
-				a2y = persony + imgperson[personindex].getheight();
+				a2y = persony + imgperson[personindex].getheight()-off;
 			}
 			else//下蹲状态
 			{
 				a1x = personx + off;
-				a1y = 355 - imgperson[personindex].getheight()+100;
+				a1y = 355 - imgPersonDown[personindex].getheight()+off;
 				a2x = personx + imgPersonDown[personindex].getwidth() - off;
-				a2y = persony + imgPersonDown[personindex].getheight();
+				a2y = 355-off;
 				
 			}
 			IMAGE img = obstacleImgs[obstacles[i].type][obstacles[i].imgIndex];
 			int b1x = obstacles[i].x + off;
 			int b1y = obstacles[i].y + off;
 			int b2x = obstacles[i].x + img.getwidth() - off;
-			int b2y = obstacles[i].y+ img.getheight()- 10;
+			int b2y = obstacles[i].y+ img.getheight()- off;
 
 			//判断是否碰撞
-			if (rectIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y))
+			if (rectIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) 
+				&& !obstacles[i].passed && obstacles[i].x < 700 && obstacles[i].x>300)
 			{
 				personblood -= obstacles[i].power;//减血
 				printf("血量剩余 %d\n", personblood);
-				
 				playSound("res/hit.mp3");
 				obstacles[i].hited = 1;
 			}
@@ -406,10 +406,12 @@ void keyEvent()
 		ch=_getch(); //读取字符而不需要按回车
 		if (ch == 'w'||ch=='W')//跳跃
 		{
-			jump();
+			if(jumpstate ==0&&downstate==0)
+				jump();
 		}
 		else if (ch == 's'||ch=='S')
 		{
+			if (jumpstate == 0 && downstate == 0)
 			down();
 		}
 	}
