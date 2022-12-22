@@ -73,13 +73,13 @@ void ranks()
 	f = fopen("score.txt", "r+");
 	fscanf_s(f, "%*[^\n]");//跳过第一行文字
 	int i = 0;
-	int sc[100];
+	int sc[500];
+	int rank = 1;
 	while (!feof(f))
 	{
 		fscanf_s(f, "%d", &sc[i]);
 		i++;
 	}
-	int rank=1;
 	for (int j = 0; j < i; j++)
 	{
 		if (sc[j] > score) rank++;
@@ -87,6 +87,18 @@ void ranks()
 	printf("您的排名为：%d", rank);
 	fprintf_s(f,"%d\n", score);
 	fclose(f);
+	char str[8];
+	sprintf_s(str, "%d", rank);//将数字转化为字符串
+
+	int x = 50;
+	int y = 60;
+
+	for (int i = 0; str[i]; i++)
+	{
+		int sz = str[i] - '0';
+		putimagePNG(x, y, &imgSZ[sz]);
+		x += imgSZ[sz].getwidth() + 5;
+	}
 }
 
 // 游戏初始化
@@ -426,12 +438,25 @@ void updatebloodbar()
 //检查游戏结束
 void checkover()
 {
+	
 	if (personblood <= 0)
 	{
-		loadimage(0, "res/over.png");
+		loadimage(0, "res/over1.png");
+		ranks();
+		char str[8];
+		sprintf_s(str, "%d", score);//将数字转化为字符串
+
+		int x = 50;
+		int y = 25;
+
+		for (int i = 0; str[i]; i++)
+		{
+			int sz = str[i] - '0';
+			putimagePNG(x, y, &imgSZ[sz]);
+			x += imgSZ[sz].getwidth() + 5;
+		}
 		FlushBatchDraw();//刷新缓冲
 		mciSendString("stop res/bg.mp3", 0, 0, 0);//关闭背景音乐
-		ranks();
 		system("pause");//暂停
 		//按任意键继续游戏
 		personblood = 100;//血加满
@@ -482,7 +507,7 @@ void checkwin()
 		FlushBatchDraw();
 		mciSendString("play res/win.mp3", 0, 0, 0);//播放胜利音乐
 		Sleep(2000);
-		loadimage(0, "res/win.png");//加载胜利画面
+		loadimage(0, "res/win1.png");//加载胜利画面
 		FlushBatchDraw();
 		mciSendString("stop res/bg.mp3", 0, 0, 0);//停止背景音乐
 		ranks();
